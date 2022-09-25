@@ -1,0 +1,7 @@
+.vscode
+.aws-sam/
+samconfig.toml
+venv/
+__pycache__
+site.db
+.DS_Store

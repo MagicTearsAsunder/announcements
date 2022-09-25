@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Announcements API application
+
+Resources:
+  AnnouncementsAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+
+  Announcements:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app/
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      Policies: [CloudWatchFullAccess, AmazonDynamoDBFullAccess]
+      Timeout: 60
+      MemorySize: 512
+      Events:
+        GetList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AnnouncementsAPI
+            Path: /announcements
+            Method: GET
+        Create:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AnnouncementsAPI
+            Path: /announcement
+            Method: POST
+        GetByTitle:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AnnouncementsAPI
+            Path: /announcement
+            Method: GET
