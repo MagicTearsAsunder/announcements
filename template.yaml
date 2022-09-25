@@ -8,6 +8,17 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
+      Auth:
+        ApiKeyRequired: true
+        UsagePlan:
+          CreateUsagePlan: PER_API
+          Quota: 
+            Limit: 1000000
+            Period: MONTH
+          Throttle: 
+            BurstLimit: 500
+            RateLimit: 1000
+          UsagePlanName: premium-plan
 
   Announcements:
     Type: AWS::Serverless::Function
@@ -37,3 +48,11 @@ Resources:
             RestApiId: !Ref AnnouncementsAPI
             Path: /announcement
             Method: GET
+  
+  DynamoDbTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      TableName: announcements
