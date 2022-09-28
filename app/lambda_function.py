@@ -1,20 +1,23 @@
-from serializer import DecimalEncoder
 from validator import validate
+from serializer import DecimalEncoder
 
+import os
 import json
 import logging
-from datetime import date
 from uuid import uuid4
+from datetime import date
 
 import boto3
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+DBNAME = os.environ['DBNAME']
+REGION = os.environ['REGION']
+QLIMIT = int(os.environ['QLIMIT'])
 
-dynamodb_table = 'announcements'
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-table = dynamodb.Table(dynamodb_table)
+dynamodb = boto3.resource('dynamodb', region_name=REGION)
+table = dynamodb.Table(DBNAME)
 
 announcement_path = '/announcement'
 announcements_path = '/announcements'
@@ -57,11 +60,29 @@ def list_announcements(params=None, body=None):
         f'In list_announcements: params:{params}, body: {body}'
     )
 
-    response = table.scan()
-    result = response['Items']
+    params = params or {}
 
-    while 'LastEvaluatedKey' in response:
-        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+    if 'limit' in params:
+        try:
+            limit = int(params['limit'])
+        except ValueError:
+            return build_response(
+                400,
+                {'Message': f'limit: {params["limit"]} '
+                 'is not a valid value'}
+            )
+    else:
+        limit = QLIMIT
+
+    response = table.scan(Limit=limit)
+    result = response['Items']
+    limit -= len(response['Items'])
+
+    while 'LastEvaluatedKey' in response and limit:
+        response = table.scan(
+            ExclusiveStartKey=response['LastEvaluatedKey'], Limit=limit
+        )
+        limit -= len(response['Items'])
         result.extend(response['Items'])
 
     return build_response(200, {'announcements': result})

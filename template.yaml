@@ -3,6 +3,14 @@ Transform: AWS::Serverless-2016-10-31
 
 Description: Announcements API application
 
+Globals:
+  Function: 
+    Environment:
+      Variables:
+        DBNAME: announcements
+        REGION: us-east-1
+        QLIMIT: 1000
+
 Resources:
   AnnouncementsAPI:
     Type: AWS::Serverless::Api
